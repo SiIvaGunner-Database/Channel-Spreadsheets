@@ -19,22 +19,24 @@ function checkChannels() {
       continue;
     }
 
-    const channelIds = channelSubmissions[index][1].replace(/ /g, "").split(",");
+    const channelIds = channelSubmissions[index][1].replace(/.*channel\/|\?.*|\s/g, "").split(",");
+    const channels = HighQualityUtils.getChannels(channelIds);
 
-    channelIds.forEach((channelId) => {
-      const channelData = HighQualityUtils.getChannel(channelId);
-
-      if (channelData) {
-        HighQualityUtils.insertRow(channelSheet, channelData);
-      }
-    });
+    if (channels) {
+      HighQualityUtils.addToSheet(channelSheet, channels);
+      formSheet.getRange(index + 2, 3, 1, 2).setValue(true);
+      Logger.log("Added " + channels.length + " out of " + channelIds.length + " channels!");
+    } else {
+      formSheet.getRange(index + 2, 3, 1, 2).setValue(false);
+      Logger.log("Failed to add " + channelIds.length + " channels!");
+    }
   }
 
   HighQualityUtils.sortSheet(channelSheet, 2, true);
 
   // TODO
-  // - Get up to 50 channel IDs
-  // - List all 50 channels
+  // - Get all channel IDs
+  // - List all channels
   // - Loop through the channels
   // - Compare old values to new ones
   // - Update changelog sheet as needed
