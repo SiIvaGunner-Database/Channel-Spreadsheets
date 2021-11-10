@@ -37,6 +37,7 @@ function checkChannels() {
     HighQualityUtils.logEvent(message);
   }
 
+  HighQualityUtils.sortSheet(channelSheet, 5, true);
   HighQualityUtils.sortSheet(channelSheet, 2, true);
 
   // Loop through the channels on the sheet
@@ -44,47 +45,59 @@ function checkChannels() {
 
   const sheetChannels = HighQualityUtils.getSheetValues(channelSheet, "channel");
   const channelIds = sheetChannels.map(channel => channel.id);
-  const ytChannels = HighQualityUtils.getChannels(channelIds).sort((a, b) => a.name.localeCompare(b.name));
+  const ytChannels = HighQualityUtils.getChannels(channelIds)
+    .sort((a, b) => a.joinDate.localeCompare(b.joinDate))
+    .sort((a, b) => a.name.localeCompare(b.name));
   let ytIndex = 0;
 
   for (let sheetIndex in sheetChannels) {
     const sheetChannel = sheetChannels[sheetIndex];
     const ytChannel = ytChannels[ytIndex];
     const row = parseInt(sheetIndex) + 2;
+    Logger.log("Updating row " + row + ": " + sheetChannel.name);
+    let ytStatus = "Public";
 
+    // If the video is not listed on YouTube
     if (sheetChannel.id != ytChannel.id) {
-      Logger.log("Skipping row " + row + ": " + sheetChannel.name);
-      continue;
+      ytStatus = "Deleted";
     } else {
       ytIndex++;
-    } 
 
-    Logger.log("Updating row " + row + ": " + sheetChannel.name);
+      if (sheetChannel.name != ytChannel.name) {
+        HighQualityUtils.logToSheet();
+        const ytHyperlink = HighQualityUtils.formatYouTubeHyperlink(sheetChannel.id);
+        const change = "Old name: " + sheetChannel.name + "\nNew name: " + ytChannel.name;
+        const logEntry = [[ ytHyperlink, ytChannel.name, change, new Date() ]];
+        HighQualityUtils.addToSheet(channelChangelogSheet, logEntry);
+        sheetChannel.name = ytChannel.name;
+        Logger.log(change);
+      }
 
-    if (sheetChannel.name != ytChannel.name) {
+      if (sheetChannel.description != ytChannel.description) {
+        const ytHyperlink = HighQualityUtils.formatYouTubeHyperlink(sheetChannel.id);
+        const change = "Old description: " + sheetChannel.description + "\nNew description: " + ytChannel.description;
+        const logEntry = [[ ytHyperlink, sheetChannel.name, change, new Date() ]];
+        HighQualityUtils.addToSheet(channelChangelogSheet, logEntry);
+        sheetChannel.description = ytChannel.description;
+        Logger.log(change);
+      }
+
+      sheetChannel.videoCount = ytChannel.videoCount;
+      sheetChannel.subscriberCount = ytChannel.subscriberCount;
+      sheetChannel.viewCount = ytChannel.viewCount;
+    }
+
+    if (sheetChannel.youtubeStatus != ytStatus) {
       const ytHyperlink = HighQualityUtils.formatYouTubeHyperlink(sheetChannel.id);
-      const change = "Old name: " + sheetChannel.name + "\nNew name: " + ytChannel.name;
-      const logEntry = [ ytHyperlink, ytChannel.name, change, new Date() ];
+      const change = "Old status: " + sheetChannel.youtubeStatus + "\nNew status: " + ytStatus;
+      const logEntry = [[ ytHyperlink, sheetChannel.name, change, new Date() ]];
       HighQualityUtils.addToSheet(channelChangelogSheet, logEntry);
-      sheetChannel.name = ytChannel.name;
+      sheetChannel.youtubeStatus = ytStatus;
       Logger.log(change);
     }
 
-    if (sheetChannel.description != ytChannel.description) {
-      const ytHyperlink = HighQualityUtils.formatYouTubeHyperlink(sheetChannel.id);
-      const change = "Old description: " + sheetChannel.name + "\nNew description: " + ytChannel.name;
-      const logEntry = [ ytHyperlink, ytChannel.name, change, new Date() ];
-      HighQualityUtils.addToSheet(channelChangelogSheet, logEntry);
-      sheetChannel.description = ytChannel.description;
-      Logger.log(change);
-    }
-
-    sheetChannel.videoCount = ytChannel.videoCount;
-    sheetChannel.subscriberCount = ytChannel.subscriberCount;
-    sheetChannel.viewCount = ytChannel.viewCount;
+    sheetChannel.id = HighQualityUtils.formatYouTubeHyperlink(sheetChannel.id);
     HighQualityUtils.updateInSheet(channelSheet, sheetChannel, row);
   }
-
-  // - TODO - Add YouTube checks
 
 }
