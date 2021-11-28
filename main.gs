@@ -26,6 +26,7 @@ function checkChannels() {
 
     if (channels) {
       HighQualityUtils.addToSheet(channelSheet, channels);
+      HighQualityUtils.postToChannelDb(channels);
       formSheet.getRange(index + 2, 3, 1, 2).setValue(true);
       message = "Added " + channels.length + " out of " + channelIds.length + " channels!";
     } else {
@@ -50,8 +51,7 @@ function checkChannels() {
     .sort((a, b) => a.name.localeCompare(b.name));
   let ytIndex = 0;
 
-  for (let sheetIndex in sheetChannels) {
-    const sheetChannel = sheetChannels[sheetIndex];
+  sheetChannels.forEach((sheetChannel) => {
     const ytChannel = ytChannels[ytIndex];
     const row = parseInt(sheetIndex) + 2;
     Logger.log("Updating row " + row + ": " + sheetChannel.name);
@@ -64,22 +64,15 @@ function checkChannels() {
       ytIndex++;
 
       if (sheetChannel.name != ytChannel.name) {
-        HighQualityUtils.logToSheet();
-        const ytHyperlink = HighQualityUtils.formatYouTubeHyperlink(sheetChannel.id);
-        const change = "Old name: " + sheetChannel.name + "\nNew name: " + ytChannel.name;
-        const logEntry = [[ ytHyperlink, ytChannel.name, change, new Date() ]];
-        HighQualityUtils.addToSheet(channelChangelogSheet, logEntry);
+        HighQualityUtils.logChange(channelChangelogSheet, sheetChannel.id, "Name", sheetChannel.name, ytChannel.name);
         sheetChannel.name = ytChannel.name;
-        Logger.log(change);
+        Logger.log("New name: " + sheetChannel.name);
       }
 
       if (sheetChannel.description != ytChannel.description) {
-        const ytHyperlink = HighQualityUtils.formatYouTubeHyperlink(sheetChannel.id);
-        const change = "Old description: " + sheetChannel.description + "\nNew description: " + ytChannel.description;
-        const logEntry = [[ ytHyperlink, sheetChannel.name, change, new Date() ]];
-        HighQualityUtils.addToSheet(channelChangelogSheet, logEntry);
+        HighQualityUtils.logChange(channelChangelogSheet, sheetChannel.id, "Description", sheetChannel.description, ytChannel.description);
         sheetChannel.description = ytChannel.description;
-        Logger.log(change);
+        Logger.log("New description: " + sheetChannel.description);
       }
 
       sheetChannel.videoCount = ytChannel.videoCount;
@@ -88,16 +81,15 @@ function checkChannels() {
     }
 
     if (sheetChannel.youtubeStatus != ytStatus) {
-      const ytHyperlink = HighQualityUtils.formatYouTubeHyperlink(sheetChannel.id);
-      const change = "Old status: " + sheetChannel.youtubeStatus + "\nNew status: " + ytStatus;
-      const logEntry = [[ ytHyperlink, sheetChannel.name, change, new Date() ]];
-      HighQualityUtils.addToSheet(channelChangelogSheet, logEntry);
+      HighQualityUtils.logChange(channelChangelogSheet, sheetChannel.id, "YouTube Status", sheetChannel.description, ytChannel.description);
       sheetChannel.youtubeStatus = ytStatus;
-      Logger.log(change);
+      Logger.log("New YouTube status: " + sheetChannel.youtubeStatus);
     }
 
     sheetChannel.id = HighQualityUtils.formatYouTubeHyperlink(sheetChannel.id);
     HighQualityUtils.updateInSheet(channelSheet, sheetChannel, row);
-  }
+  });
+
+  HighQualityUtils.postToChannelDb(sheetChannels);
 
 }
