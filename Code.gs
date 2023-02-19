@@ -75,15 +75,10 @@ function updateChannels() {
 }
 
 /**
- * Deletes and recreates project triggers.
+ * Delete and recreate project triggers.
  */
 function resetTriggers() {
-  const triggers = ScriptApp.getProjectTriggers()
-
-  for (let i in triggers) {
-    ScriptApp.deleteTrigger(triggers[i])
-  }
-
+  HighQualityUtils.settings().deleteTriggers()
   ScriptApp.newTrigger('updateChannels')
     .timeBased()
     .everyHours(12)
