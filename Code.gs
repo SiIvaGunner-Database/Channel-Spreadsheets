@@ -1,8 +1,15 @@
+HighQualityUtils.settings().enableDevMode()
+HighQualityUtils.settings().setAuthToken(ScriptProperties)
+
 /**
  * Update the channel database and sheets.
  */
 function updateChannels() {
-  const channelSpreadsheetId = "16PLJOqdZOdLXguKmUlUwZfu-1rVXzuJLHbY18BUSOAw"
+  const channelSpreadsheetId = (
+    HighQualityUtils.settings().isDevModeEnabled() === true // if dev mode
+    ? "1EDz_beMzXpxv8CpRhEu_GhcYCbT6EOP4JBDw93XoGdU" // then development
+    : "16PLJOqdZOdLXguKmUlUwZfu-1rVXzuJLHbY18BUSOAw" // else production
+  )
   const channelSpreadsheet = HighQualityUtils.spreadsheets().getById(channelSpreadsheetId)
   const channelSheet = channelSpreadsheet.getSheet("Channels")
   const changelogSheet = channelSpreadsheet.getSheet("Changelog")
@@ -20,37 +27,42 @@ function updateChannels() {
     if (channel.hasChanges() === true) {
       const changes = channel.getChanges()
       const loggedFields = ["title", "description"]
-      console.log(changes)
 
       // Add specified fields to the changelog sheet
       changes.forEach(change => {
+        console.log(change.message)
+
         if (loggedFields.includes(change.key) === true) {
-          console.log(`New ${change.key}: ${change.value}`)
           changelogValues.push([
             channelHyperlink,
             channel.getDatabaseObject().title,
-            change.message,
+            change.label,
+            change.oldValue,
+            change.newValue,
             change.timestamp
           ])
         }
       })
     }
 
+    const oldStatus = channel.getDatabaseObject().channelStatus
     const currentStatus = channel.getYoutubeStatus()
 
     // If the YouTube status has changed
-    if (channel.getDatabaseObject().youtubeStatus !== currentStatus) {
-      console.log(`New status: ${currentStatus}`)
+    if (oldStatus !== currentStatus) {
+      console.log(`Old status: ${oldStatus}\nNew status: ${currentStatus}`)
       changelogValues.push([
         channelHyperlink,
         channel.getDatabaseObject().title,
-        change.message,
+        "Status",
+        oldStatus,
+        currentStatus,
         HighQualityUtils.utils().formatDate()
       ])
     }
 
     // If there were any changes
-    if (channel.hasChanges() === true || channel.getDatabaseObject().youtubeStatus !== currentStatus) {
+    if (channel.hasChanges() === true || oldStatus !== currentStatus) {
       channelsToUpdate.push(channel)
     }
 
@@ -59,7 +71,7 @@ function updateChannels() {
       channel.getSpreadsheetHyperlink(),
       channel.getDatabaseObject().title,
       channel.getWikiHyperlink(),
-      channel.getDatabaseObject().youtubeStatus,
+      channel.getDatabaseObject().channelStatus,
       channel.getDatabaseObject().publishedAt,
       channel.getDatabaseObject().description,
       channel.getDatabaseObject().videoCount,
@@ -71,6 +83,7 @@ function updateChannels() {
   // Push the updates to the database, channel sheet, and changelog sheet
   HighQualityUtils.channels().updateAll(channelsToUpdate)
   channelSheet.updateValues(channelValues)
+  channelSheet.sort(3)
   changelogSheet.insertValues(changelogValues)
 }
 
