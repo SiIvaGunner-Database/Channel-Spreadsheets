@@ -5,14 +5,6 @@ HighQualityUtils.settings().setAuthToken(ScriptProperties)
  * Update the channel database and sheets.
  */
 function updateChannels() {
-  const channelSpreadsheetId = (
-    HighQualityUtils.settings().isDevModeEnabled() === true // if dev mode
-    ? "1EDz_beMzXpxv8CpRhEu_GhcYCbT6EOP4JBDw93XoGdU" // then development
-    : "16PLJOqdZOdLXguKmUlUwZfu-1rVXzuJLHbY18BUSOAw" // else production
-  )
-  const channelSpreadsheet = HighQualityUtils.spreadsheets().getById(channelSpreadsheetId)
-  const channelSheet = channelSpreadsheet.getSheet("Channels")
-  const changelogSheet = channelSpreadsheet.getSheet("Changelog")
   const channels = HighQualityUtils.channels().getAll()
   const channelsToUpdate = []
   const channelValues = []
@@ -51,6 +43,7 @@ function updateChannels() {
     // If the YouTube status has changed
     if (oldStatus !== currentStatus) {
       console.log(`Old status: ${oldStatus}\nNew status: ${currentStatus}`)
+      channel.getDatabaseObject().channelStatus = currentStatus
       changelogValues.push([
         channelHyperlink,
         channel.getDatabaseObject().title,
@@ -79,6 +72,15 @@ function updateChannels() {
       channel.getDatabaseObject().viewCount
     ])
   })
+
+  const channelSpreadsheetId = (
+    HighQualityUtils.settings().isDevModeEnabled() === true // if dev mode
+    ? "1EDz_beMzXpxv8CpRhEu_GhcYCbT6EOP4JBDw93XoGdU" // then development
+    : "16PLJOqdZOdLXguKmUlUwZfu-1rVXzuJLHbY18BUSOAw" // else production
+  )
+  const channelSpreadsheet = HighQualityUtils.spreadsheets().getById(channelSpreadsheetId)
+  const channelSheet = channelSpreadsheet.getSheet("Channels")
+  const changelogSheet = channelSpreadsheet.getSheet("Changelog")
 
   // Push the updates to the database, channel sheet, and changelog sheet
   HighQualityUtils.channels().updateAll(channelsToUpdate)
