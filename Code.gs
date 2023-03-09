@@ -1,4 +1,5 @@
-HighQualityUtils.settings().enableDevMode()
+// IMPORTANT! Enable dev mode when testing.
+// HighQualityUtils.settings().enableDevMode()
 HighQualityUtils.settings().setAuthToken(ScriptProperties)
 
 /**
@@ -83,10 +84,11 @@ function updateChannels() {
   const changelogSheet = channelSpreadsheet.getSheet("Changelog")
 
   // Push the updates to the database, channel sheet, and changelog sheet
-  HighQualityUtils.channels().updateAll(channelsToUpdate)
+  changelogSheet.insertValues(changelogValues)
+  changelogSheet.sort(6, false)
   channelSheet.updateValues(channelValues)
   channelSheet.sort(3)
-  changelogSheet.insertValues(changelogValues)
+  HighQualityUtils.channels().updateAll(channelsToUpdate)
 }
 
 /**
