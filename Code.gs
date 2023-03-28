@@ -96,8 +96,5 @@ function updateChannels() {
  */
 function resetTriggers() {
   HighQualityUtils.settings().deleteTriggers()
-  ScriptApp.newTrigger('updateChannels')
-    .timeBased()
-    .everyHours(12)
-    .create()
+  ScriptApp.newTrigger("updateChannels").timeBased().everyHours(12).create()
 }
