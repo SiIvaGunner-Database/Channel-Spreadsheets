@@ -4,4 +4,4 @@ Google Apps Script functions for documenting SiIvaGunner related channels in Goo
 
 ### External Links
 
-* [SiIvaGunner Channels Database Spreadsheet](https://docs.google.com/spreadsheets/d/16PLJOqdZOdLXguKmUlUwZfu-1rVXzuJLHbY18BUSOAw/edit)
+* [SiIvaGunner Channels Spreadsheet](https://docs.google.com/spreadsheets/d/16PLJOqdZOdLXguKmUlUwZfu-1rVXzuJLHbY18BUSOAw/edit)
