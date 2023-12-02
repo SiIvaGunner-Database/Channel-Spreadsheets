@@ -120,11 +120,3 @@ function updateAllVideoStatuses(channel, newVideoStatus) {
     HighQualityUtils.videos().updateAll(videosToUpdate)
   }
 }
-
-/**
- * Delete and recreate project triggers.
- */
-function resetTriggers() {
-  HighQualityUtils.settings().deleteTriggers()
-  ScriptApp.newTrigger("updateChannels").timeBased().everyHours(12).create()
-}
