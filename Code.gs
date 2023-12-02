@@ -53,6 +53,10 @@ function updateChannels() {
         currentStatus,
         HighQualityUtils.utils().formatDate()
       ])
+
+      if (currentStatus === "Deleted") {
+        updateAllVideoStatuses(channel, "Deleted")
+      }
     }
 
     // If there were any changes
@@ -89,6 +93,32 @@ function updateChannels() {
   channelSheet.updateValues(channelValues)
   channelSheet.sort(3)
   HighQualityUtils.channels().updateAll(channelsToUpdate)
+}
+
+/**
+ * Update all channel video statuses to a given value.
+ * Useful for when a channel is deleted and all of their videos are deleted at once.
+ * @param {Channel} channel - The channel object.
+ * @param {String} newVideoStatus - The video status to set.
+ */
+function updateAllVideoStatuses(channel, newVideoStatus) {
+  const videosToUpdate = []
+  const videoOptions = { "parameters": { "fields": "id,videoStatus" } }
+
+  channel.getVideos(videoOptions)[0].forEach(video => {
+    if (video.getDatabaseObject().videoStatus !== newVideoStatus) {
+      video.getDatabaseObject().videoStatus = newVideoStatus
+      videosToUpdate.push(video)
+    }
+  })
+
+  if (videosToUpdate.length > 0) {
+    console.log(`Updating ${videosToUpdate.length} videos status for channel with ID ${channel.getId()}`)
+    const range = channel.getSheet().getOriginalObject().getRange("D2:D")
+    const newStatuses = range.getValues().map(value => ["Deleted"])
+    range.setValues(newStatuses)
+    HighQualityUtils.videos().updateAll(videosToUpdate)
+  }
 }
 
 /**
