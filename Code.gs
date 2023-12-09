@@ -102,6 +102,8 @@ function updateChannels() {
  * @param {String} newVideoStatus - The video status to set.
  */
 function updateAllVideoStatuses(channel, newVideoStatus) {
+  HighQualityUtils.settings().disableYoutubeApi()
+
   const videosToUpdate = []
   const videoOptions = { "parameters": { "fields": "id,videoStatus" } }
 
@@ -119,4 +121,6 @@ function updateAllVideoStatuses(channel, newVideoStatus) {
     range.setValues(newStatuses)
     HighQualityUtils.videos().updateAll(videosToUpdate)
   }
+
+  HighQualityUtils.settings().enableYoutubeApi()
 }
