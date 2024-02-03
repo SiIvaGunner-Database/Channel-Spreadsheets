@@ -26,6 +26,13 @@ function updateChannels() {
         console.log(change.message)
 
         if (loggedFields.includes(change.key) === true) {
+          if (change.key === "title") {
+            const emailAddress = "a.k.zamboni@gmail.com";
+            const subject = "Channel Renamed: " + change.newValue;
+            const message = "A channel [" + channel.getId() + "] has been renamed.\n\n" + change.message;
+            MailApp.sendEmail(emailAddress, subject, message);
+          }
+
           changelogValues.push([
             channelHyperlink,
             channel.getDatabaseObject().title,
