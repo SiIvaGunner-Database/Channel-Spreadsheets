@@ -27,10 +27,7 @@ function updateChannels() {
 
         if (loggedFields.includes(change.key) === true) {
           if (change.key === "title") {
-            const emailAddress = "a.k.zamboni@gmail.com";
-            const subject = "Channel Renamed: " + change.newValue;
-            const message = "A channel [" + channel.getId() + "] has been renamed.\n\n" + change.message;
-            MailApp.sendEmail(emailAddress, subject, message);
+            applyTitleChange(channel, change)
           }
 
           changelogValues.push([
@@ -100,6 +97,35 @@ function updateChannels() {
   channelSheet.updateValues(channelValues)
   channelSheet.sort(3)
   HighQualityUtils.channels().updateAll(channelsToUpdate)
+}
+
+/**
+ * Send an email notification of the title change and update references to the title in the channel's rip sheet.
+ * @param {Channel} channel - The channel object.
+ * @param {Object} change - The title change object returned in channel.getChanges().
+ */
+function applyTitleChange(channel, change) {
+  // Send an email notification
+  const emailAddress = "a.k.zamboni@gmail.com";
+  const subject = "Channel Renamed: " + change.newValue;
+  const message = "A channel [" + channel.getId() + "] has been renamed.\n\n" + change.message;
+  MailApp.sendEmail(emailAddress, subject, message);
+
+  // Update the channel's rips sheet name and find the title hyperlink on the index sheet
+  const ripsSheet = channel.getSheet().getOriginalObject().setName(change.newValue)
+  const indexSheet = ripsSheet.getParent().getSheetByName("Index")
+  const textFinder = indexSheet.createTextFinder(change.oldValue)
+
+  while (textFinder.findNext() !== null) {
+    const hyperlinkRange = textFinder.getCurrentMatch()
+    const hyperlinkFormula = hyperlinkRange.getFormula()
+
+    // If the title hyperlink is found, update it with the new title
+    if (hyperlinkFormula.startsWith("=HYPERLINK") === true) {
+      const newFormula = hyperlinkFormula.replace(change.oldValue, change.newValue)
+      hyperlinkRange.setFormula(newFormula)
+    }
+  }
 }
 
 /**
