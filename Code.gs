@@ -111,19 +111,21 @@ function applyTitleChange(channel, change) {
   const message = "A channel [" + channel.getId() + "] has been renamed.\n\n" + change.message;
   MailApp.sendEmail(emailAddress, subject, message);
 
-  // Update the channel's rips sheet name and find the title hyperlink on the index sheet
-  const ripsSheet = channel.getSheet().getOriginalObject().setName(change.newValue)
-  const indexSheet = ripsSheet.getParent().getSheetByName("Index")
-  const textFinder = indexSheet.createTextFinder(change.oldValue)
+  // If the channel has a rips sheet, update the sheet name and find the title hyperlink on the index sheet
+  if (channel.hasSheet() === true) {
+    const ripsSheet = channel.getSheet().getOriginalObject().setName(change.newValue)
+    const indexSheet = ripsSheet.getParent().getSheetByName("Index")
+    const textFinder = indexSheet.createTextFinder(change.oldValue)
 
-  while (textFinder.findNext() !== null) {
-    const hyperlinkRange = textFinder.getCurrentMatch()
-    const hyperlinkFormula = hyperlinkRange.getFormula()
+    while (textFinder.findNext() !== null) {
+      const hyperlinkRange = textFinder.getCurrentMatch()
+      const hyperlinkFormula = hyperlinkRange.getFormula()
 
-    // If the title hyperlink is found, update it with the new title
-    if (hyperlinkFormula.startsWith("=HYPERLINK") === true) {
-      const newFormula = hyperlinkFormula.replace(change.oldValue, change.newValue)
-      hyperlinkRange.setFormula(newFormula)
+      // If the title hyperlink is found, update it with the new title
+      if (hyperlinkFormula.startsWith("=HYPERLINK") === true) {
+        const newFormula = hyperlinkFormula.replace(change.oldValue, change.newValue)
+        hyperlinkRange.setFormula(newFormula)
+      }
     }
   }
 }
